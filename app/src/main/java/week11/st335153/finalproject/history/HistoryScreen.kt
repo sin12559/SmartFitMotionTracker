@@ -5,41 +5,80 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import week11.st335153.finalproject.data.FirestoreResult
+import week11.st335153.finalproject.data.Workout
 
 @Composable
-fun HistoryScreen(nav: NavController) {
+fun HistoryScreen(
+    navController: NavController,
+    viewModel: WorkoutHistoryViewModel = viewModel()
+) {
+    val workouts by viewModel.workouts.collectAsState()
 
-    val vm = remember { HistoryViewModel() }
-    val state = vm.state.collectAsState()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text("Workout History", style = MaterialTheme.typography.headlineMedium)
 
-    Column(Modifier.padding(20.dp)) {
-        Text("History", style = MaterialTheme.typography.headlineMedium)
-
-        Spacer(Modifier.height(20.dp))
-
-        when (val s = state.value) {
-            is FirestoreResult.Loading -> CircularProgressIndicator()
-
-            is FirestoreResult.Error ->
-                Text("Error: ${s.message}", color = MaterialTheme.colorScheme.error)
-
-            is FirestoreResult.Success -> {
-                LazyColumn {
-                    items(s.data) { item ->
-                        Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-                            Column(Modifier.padding(16.dp)) {
-                                Text("Steps: ${item.steps}")
-                                Text("Light: ${item.light}")
-                                Text("Movement: ${item.movement}")
-                                Text("Time: ${item.timestamp}")
-                            }
-                        }
-                    }
+        if (workouts.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("No workouts saved yet.")
+            }
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(workouts, key = { it.id }) { workout ->
+                    HistoryItem(
+                        workout = workout,
+                        onDelete = { viewModel.deleteWorkout(workout.id) }
+                    )
                 }
+            }
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = { navController.popBackStack() },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text("Back")
+        }
+    }
+}
+
+@Composable
+private fun HistoryItem(
+    workout: Workout,
+    onDelete: () -> Unit
+) {
+    Card {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    "${workout.steps} steps • ${workout.minutes} mins",
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(workout.notes.ifBlank { "No notes" })
+                Text(
+                    workout.dateFormatted,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            TextButton(onClick = onDelete) {
+                Text("Delete")
             }
         }
     }

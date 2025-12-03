@@ -4,42 +4,73 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun RegisterScreen(nav: NavController) {
-    val vm = remember { AuthViewModel() }
-    val state = vm.state.collectAsState()
-
+fun RegisterScreen(
+    onRegisterSuccess: () -> Unit,
+    onNavigateToLogin: () -> Unit
+) {
     var email by remember { mutableStateOf("") }
-    var pass by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirm by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
 
-    Column(Modifier.padding(24.dp)) {
+    val auth = FirebaseAuth.getInstance()
 
-        Text("Register", style = MaterialTheme.typography.headlineMedium)
-
-        Spacer(Modifier.height(16.dp))
-
-        TextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
-        Spacer(Modifier.height(8.dp))
-
-        TextField(value = pass, onValueChange = { pass = it }, label = { Text("Password") })
+    Column(Modifier.fillMaxSize().padding(24.dp)) {
+        Text("Register", style = MaterialTheme.typography.titleLarge)
 
         Spacer(Modifier.height(16.dp))
+
+        OutlinedTextField(value = email, onValueChange = { email = it },
+            label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
+
+        Spacer(Modifier.height(12.dp))
+
+        OutlinedTextField(value = password, onValueChange = { password = it },
+            label = { Text("Password") },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth())
+
+        Spacer(Modifier.height(12.dp))
+
+        OutlinedTextField(value = confirm, onValueChange = { confirm = it },
+            label = { Text("Confirm Password") },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth())
+
+        Spacer(Modifier.height(20.dp))
 
         Button(onClick = {
-            vm.register(email, pass) { nav.navigate("dashboard") }
+            if (password != confirm) {
+                error = "Passwords do not match"
+                return@Button
+            }
+
+            loading = true
+            auth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener { task ->
+                    loading = false
+                    if (task.isSuccessful) onRegisterSuccess()
+                    else error = task.exception?.message
+                }
         }, modifier = Modifier.fillMaxWidth()) {
-            Text("Create Account")
+            Text(if (loading) "Please wait…" else "Register")
         }
 
-        TextButton(onClick = { nav.popBackStack() }) {
-            Text("Back")
+        error?.let {
+            Spacer(Modifier.height(12.dp))
+            Text(it, color = MaterialTheme.colorScheme.error)
         }
 
-        state.value.error?.let {
-            Text("Error: $it", color = MaterialTheme.colorScheme.error)
+        Spacer(Modifier.height(12.dp))
+
+        TextButton(onClick = onNavigateToLogin) {
+            Text("Already have an account? Login")
         }
     }
 }
