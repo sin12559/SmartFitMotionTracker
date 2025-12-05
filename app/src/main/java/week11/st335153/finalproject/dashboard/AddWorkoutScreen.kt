@@ -2,6 +2,7 @@ package week11.st335153.finalproject.dashboard
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +20,10 @@ fun AddWorkoutScreen(
     var steps by remember { mutableStateOf("") }
     var minutes by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    var loading by remember { mutableStateOf(false) } // <-- loading state
+
+
 
     Column(
         modifier = Modifier
@@ -32,41 +37,69 @@ fun AddWorkoutScreen(
             value = steps,
             onValueChange = { steps = it },
             label = { Text("Steps") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !loading
         )
 
         OutlinedTextField(
             value = minutes,
             onValueChange = { minutes = it },
             label = { Text("Minutes") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !loading
         )
 
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },
             label = { Text("Notes") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !loading
         )
+        error?.let {
+            Text(it, color = MaterialTheme.colorScheme.error)
+        }
+
 
         Spacer(Modifier.height(20.dp))
 
         Button(
             onClick = {
-                val s = steps.toIntOrNull() ?: 0
-                val m = minutes.toIntOrNull() ?: 0
+                error = null // Clear previous error
 
-                viewModel.saveWorkout(
-                    steps = s,
-                    minutes = m,
-                    notes = notes
-                ) {
-                    navController.popBackStack()
+                val s = steps.toIntOrNull()
+                val m = minutes.toIntOrNull()
+
+                when {
+                    steps.isBlank() || minutes.isBlank() ->
+                        error = "Steps and Minutes cannot be empty."
+                    s == null || m == null ->
+                        error = "Steps and Minutes must be numbers."
+                    s <= 0 || m <= 0 ->
+                        error = "Steps and Minutes must be greater than 0."
+                    else -> {
+                        viewModel.saveWorkout(
+                            steps = s,
+                            minutes = m,
+                            notes = notes
+                        ) {
+                            navController.popBackStack()
+                        }
+                    }
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !loading
         ) {
-            Text("Save")
+            if (loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
+                Text("Save")
+            }
         }
     }
 }

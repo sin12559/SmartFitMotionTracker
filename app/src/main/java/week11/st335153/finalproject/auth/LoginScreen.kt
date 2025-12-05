@@ -7,6 +7,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import androidx.compose.material3.OutlinedTextField
+
 
 @Composable
 fun LoginScreen(
@@ -33,7 +37,8 @@ fun LoginScreen(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !loading
         )
 
         Spacer(Modifier.height(12.dp))
@@ -43,13 +48,19 @@ fun LoginScreen(
             onValueChange = { password = it },
             label = { Text("Password") },
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !loading
         )
 
         Spacer(Modifier.height(20.dp))
 
         Button(
             onClick = {
+                error = null
+                if (email.isBlank() || password.isBlank()) {
+                    error = "Please enter both email and password."
+                    return@Button
+                }
                 loading = true
                 auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener { task ->
@@ -57,11 +68,16 @@ fun LoginScreen(
                         if (task.isSuccessful) {
                             onLoginSuccess()
                         } else {
-                            error = task.exception?.message
+                            error = when (task.exception) {
+                                is FirebaseAuthInvalidUserException -> "No account found with this email."
+                                is FirebaseAuthInvalidCredentialsException -> "Incorrect email or password."
+                                else -> "Login failed. Please try again."
+                            }
                         }
                     }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !loading
         ) {
             Text(if (loading) "Please wait…" else "Login")
         }
@@ -73,7 +89,8 @@ fun LoginScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        TextButton(onClick = onNavigateToRegister) {
+        TextButton(onClick = onNavigateToRegister,
+            enabled = !loading) {
             Text("Go to Register")
         }
     }
