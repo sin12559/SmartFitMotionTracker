@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.google.firebase.auth.FirebaseAuth
 import week11.st335153.finalproject.auth.LoginScreen
 import week11.st335153.finalproject.auth.RegisterScreen
@@ -53,8 +55,21 @@ fun AppNavGraph(navController: NavHostController) {
             DashboardScreen(navController)
         }
 
-        composable("addWorkout") {
-            AddWorkoutScreen(navController)
+        // 🔽 AddWorkout now accepts initialSteps as a route argument
+        composable(
+            route = "addWorkout/{initialSteps}",
+            arguments = listOf(
+                navArgument("initialSteps") {
+                    type = NavType.IntType
+                    defaultValue = 0
+                }
+            )
+        ) { backStackEntry ->
+            val stepsArg = backStackEntry.arguments?.getInt("initialSteps") ?: 0
+            AddWorkoutScreen(
+                navController = navController,
+                initialSteps = stepsArg
+            )
         }
 
         composable("history") {

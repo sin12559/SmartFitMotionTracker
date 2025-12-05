@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlin.math.sqrt
 
 /**
- * Handles step counter, accelerometer (movement) and light sensor.
+ * Handles step counter, step detector, accelerometer (movement) and light sensor.
  * All sensors are optional – if the emulator/device doesn't have them,
  * this will just keep values at 0 and never crash.
  */
@@ -20,10 +20,18 @@ class SensorsManager(context: Context) : SensorEventListener {
     private val sensorManager =
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
-    private val stepSensor: Sensor? =
+    // Step sensors (we try both)
+    private val stepCounterSensor: Sensor? =
         sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+
+    private val stepDetectorSensor: Sensor? =
+        sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
+
+    // Raw accelerometer (includes gravity)
     private val accelSensor: Sensor? =
         sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+
+    // Light sensor
     private val lightSensor: Sensor? =
         sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
 
@@ -40,7 +48,10 @@ class SensorsManager(context: Context) : SensorEventListener {
     private var stepBase: Float? = null
 
     fun start() {
-        stepSensor?.let {
+        stepCounterSensor?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
+        }
+        stepDetectorSensor?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
         }
         accelSensor?.let {
@@ -57,6 +68,8 @@ class SensorsManager(context: Context) : SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent) {
         when (event.sensor.type) {
+
+            // Hardware cumulative counter – we normalize to start at 0
             Sensor.TYPE_STEP_COUNTER -> {
                 val total = event.values.firstOrNull() ?: return
                 if (stepBase == null) {
@@ -66,12 +79,26 @@ class SensorsManager(context: Context) : SensorEventListener {
                 _steps.value = diff.toInt().coerceAtLeast(0)
             }
 
+            // Detector – each event is typically 1 step
+            Sensor.TYPE_STEP_DETECTOR -> {
+                val step = event.values.firstOrNull() ?: return
+                if (step > 0f) {
+                    _steps.value = _steps.value + step.toInt()
+                }
+            }
+
+            // Movement: remove gravity so idle ≈ 0, moving > 0
             Sensor.TYPE_ACCELEROMETER -> {
                 val x = event.values[0]
                 val y = event.values[1]
                 val z = event.values[2]
                 val magnitude = sqrt(x * x + y * y + z * z)
-                _movement.value = magnitude
+
+                // Earth gravity ≈ 9.81 m/s²; subtract it and clamp to 0
+                val gravity = SensorManager.GRAVITY_EARTH
+                val movementForce = (magnitude - gravity).coerceAtLeast(0f)
+
+                _movement.value = movementForce
             }
 
             Sensor.TYPE_LIGHT -> {
