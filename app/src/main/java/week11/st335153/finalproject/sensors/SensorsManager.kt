@@ -20,18 +20,15 @@ class SensorsManager(context: Context) : SensorEventListener {
     private val sensorManager =
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
-    // Step sensors (we try both)
     private val stepCounterSensor: Sensor? =
         sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
 
     private val stepDetectorSensor: Sensor? =
         sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
 
-    // Raw accelerometer (includes gravity)
     private val accelSensor: Sensor? =
         sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
-    // Light sensor
     private val lightSensor: Sensor? =
         sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
 
@@ -44,7 +41,6 @@ class SensorsManager(context: Context) : SensorEventListener {
     private val _light = MutableStateFlow(0f)
     val light: StateFlow<Float> = _light.asStateFlow()
 
-    // First reading from the step counter; used to make values start at 0.
     private var stepBase: Float? = null
 
     fun start() {
@@ -69,7 +65,6 @@ class SensorsManager(context: Context) : SensorEventListener {
     override fun onSensorChanged(event: SensorEvent) {
         when (event.sensor.type) {
 
-            // Hardware cumulative counter – we normalize to start at 0
             Sensor.TYPE_STEP_COUNTER -> {
                 val total = event.values.firstOrNull() ?: return
                 if (stepBase == null) {
@@ -79,7 +74,6 @@ class SensorsManager(context: Context) : SensorEventListener {
                 _steps.value = diff.toInt().coerceAtLeast(0)
             }
 
-            // Detector – each event is typically 1 step
             Sensor.TYPE_STEP_DETECTOR -> {
                 val step = event.values.firstOrNull() ?: return
                 if (step > 0f) {
@@ -87,14 +81,12 @@ class SensorsManager(context: Context) : SensorEventListener {
                 }
             }
 
-            // Movement: remove gravity so idle ≈ 0, moving > 0
             Sensor.TYPE_ACCELEROMETER -> {
                 val x = event.values[0]
                 val y = event.values[1]
                 val z = event.values[2]
                 val magnitude = sqrt(x * x + y * y + z * z)
 
-                // Earth gravity ≈ 9.81 m/s²; subtract it and clamp to 0
                 val gravity = SensorManager.GRAVITY_EARTH
                 val movementForce = (magnitude - gravity).coerceAtLeast(0f)
 
@@ -108,6 +100,5 @@ class SensorsManager(context: Context) : SensorEventListener {
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        // no-op
     }
 }

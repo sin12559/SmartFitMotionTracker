@@ -73,8 +73,6 @@ class DashboardViewModel : ViewModel() {
 
     fun getWorkoutById(id: String): Workout? =
         _workouts.value.firstOrNull { it.id == id }
-
-    // Simple stats used by Dashboard + StatsScreen
     val totalSteps: Int
         get() = _workouts.value.sumOf { it.steps }
 

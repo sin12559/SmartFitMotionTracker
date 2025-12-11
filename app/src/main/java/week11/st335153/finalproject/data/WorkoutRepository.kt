@@ -20,9 +20,6 @@ class WorkoutRepository {
                 .collection("workouts")
         }
 
-    /**
-     * Realtime stream of workouts ordered by date (newest first).
-     */
     fun getWorkoutsFlow(): Flow<List<Workout>> = callbackFlow {
         val collection = workoutsCollection()
         if (collection == null) {
@@ -35,7 +32,6 @@ class WorkoutRepository {
             .orderBy("date")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    // In a real app you'd log this; here we just keep the last good value.
                     return@addSnapshotListener
                 }
 
@@ -44,7 +40,6 @@ class WorkoutRepository {
                     workout?.copy(id = doc.id)
                 }.orEmpty()
 
-                // newest first
                 trySend(list.sortedByDescending { it.date })
             }
 

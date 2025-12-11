@@ -28,10 +28,6 @@ class LocationRepository(context: Context) {
         context.applicationContext
     )
 
-    /**
-     * Stream of location updates every [intervalMs] ms.
-     * Caller must ensure location permission is granted before using this.
-     */
     @SuppressLint("MissingPermission")
     fun observeLocation(intervalMs: Long = 10_000L): Flow<LocationData> = callbackFlow {
         val request = LocationRequest.Builder(
@@ -63,9 +59,7 @@ class LocationRepository(context: Context) {
         }
     }
 
-    /**
-     * One-shot fetch of last known location.
-     */
+
     @SuppressLint("MissingPermission")
     suspend fun getLastLocation(): LocationData? =
         suspendCancellableCoroutine { cont ->

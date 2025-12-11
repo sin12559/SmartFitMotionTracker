@@ -55,7 +55,6 @@ fun AppNavGraph(navController: NavHostController) {
             DashboardScreen(navController)
         }
 
-        // 🔽 AddWorkout now accepts initialSteps as a route argument
         composable(
             route = "addWorkout/{initialSteps}",
             arguments = listOf(
