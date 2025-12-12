@@ -15,6 +15,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LightMode
@@ -172,7 +174,7 @@ fun DashboardScreen(
                         )
 
                         SummaryRow(
-                            icon = Icons.Default.DirectionsRun,
+                            icon = Icons.AutoMirrored.Filled.DirectionsRun,
                             label = "Steps",
                             value = "$steps"
                         )
@@ -326,7 +328,7 @@ fun DashboardScreen(
                     shape = RoundedCornerShape(24.dp)
                 ) {
                     Icon(
-                        Icons.Default.Logout,
+                        Icons.AutoMirrored.Filled.Logout,
                         contentDescription = null,
                         modifier = Modifier.padding(end = 8.dp)
                     )

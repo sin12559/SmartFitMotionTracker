@@ -5,6 +5,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.Note
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Note
@@ -105,7 +106,7 @@ fun EditWorkoutScreen(
                         onValueChange = { notes = it },
                         label = { Text("Notes") },
                         leadingIcon = {
-                            Icon(Icons.Default.Note, contentDescription = null)
+                            Icon(Icons.AutoMirrored.Filled.Note, contentDescription = null)
                         },
                         modifier = Modifier
                             .fillMaxWidth()

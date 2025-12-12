@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.Note
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Note
@@ -94,7 +96,7 @@ fun StatsScreen(
 
             StatCard(
                 title = "Average Per Workout",
-                icon = Icons.Default.TrendingUp
+                icon = Icons.AutoMirrored.Filled.TrendingUp
             ) {
                 StatRow(Icons.AutoMirrored.Filled.DirectionsRun, "Avg Steps", "$avgSteps")
                 StatRow(Icons.Default.Timer, "Avg Minutes", "$avgMinutes")
@@ -108,7 +110,7 @@ fun StatsScreen(
                 ) {
                     StatRow(Icons.AutoMirrored.Filled.DirectionsRun, "Steps", "${last.steps}")
                     StatRow(Icons.Default.Timer, "Minutes", "${last.minutes}")
-                    StatRow(Icons.Default.Note, "Notes", last.notes.ifBlank { "None" })
+                    StatRow(Icons.AutoMirrored.Filled.Note, "Notes", last.notes.ifBlank { "None" })
                     Text(
                         last.dateFormatted,
                         style = MaterialTheme.typography.bodySmall,
